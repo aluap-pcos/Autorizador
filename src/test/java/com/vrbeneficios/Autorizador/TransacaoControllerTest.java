@@ -1,5 +1,6 @@
 package com.vrbeneficios.Autorizador;
 
+import com.vrbeneficios.Autorizador.controller.form.TransacaoForm;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,21 +9,22 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class CartaoControllerTest {
+public class TransacaoControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    public void deveriaCriarUmCartao() throws Exception {
-        URI uri = new URI("/cartoes");
-        String body = "{\"numeroCartao\": \"1234567890098768\", \"senha\": \"1234\"}";
+    public void deveriaRealixarUmaTransacao() throws Exception {
+        criarCartao();
+
+        URI uri = new URI("/transacao");
+        String body = "{\"numeroCartao\" : \"1234567890098765\", \"senhaCartao\" : \"1234\", \"valor\" : 10.00}";
 
         mockMvc
                 .perform(MockMvcRequestBuilders
@@ -35,10 +37,11 @@ public class CartaoControllerTest {
     }
 
     @Test
-    public void dsveriaDevolver422AoTentarCriarUmCartaoQueJaExiste() throws Exception {
-        URI uri = new URI("/cartoes");
-        String body = "{\"numeroCartao\": \"1234567890098765\", \"senha\": \"1234\"}";
+    public void deveriaDevolver422QuandoOSaldoEInsuficiente() throws Exception {
         criarCartao();
+
+        URI uri = new URI("/transacao");
+        String body = "{\"numeroCartao\" : \"1234567890098765\", \"senhaCartao\" : \"1234\", \"valor\" : 600.00}";
 
         mockMvc
                 .perform(MockMvcRequestBuilders
@@ -51,30 +54,35 @@ public class CartaoControllerTest {
     }
 
     @Test
-    public void deveriaDevolver404AoTentarConsultarOSaldoDeUmCartaoQueNaoExiste() throws Exception {
-        URI uri = new URI("/cartoes/1231231231231231");
+    public void deveriaDevolver422QuandoOCartaoNaoExiste() throws Exception {
+        URI uri = new URI("/transacao");
+        String body = "{\"numeroCartao\" : \"1234567890098769\", \"senhaCartao\" : \"1234\", \"valor\" : 10.00}";
 
         mockMvc
                 .perform(MockMvcRequestBuilders
-                        .get(uri)
+                        .post(uri)
+                        .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers
                         .status()
-                        .is(404));
+                        .is(422));
     }
 
     @Test
-    public void deveriaDevolverOSaldoDeUmCartaoQueJaExiste() throws Exception {
+    public void deveriaDevolver422QuandoASenhaEstaIncorreta() throws Exception {
         criarCartao();
 
-        URI uri = new URI("/cartoes/1234567890098765");
+        URI uri = new URI("/transacao");
+        String body = "{\"numeroCartao\" : \"1234567890098765\", \"senhaCartao\" : \"1230\", \"valor\" : 10.00}";
+
         mockMvc
                 .perform(MockMvcRequestBuilders
-                        .get(uri)
+                        .post(uri)
+                        .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers
                         .status()
-                        .is(200));
+                        .is(422));
     }
 
     public void criarCartao() throws Exception {
@@ -87,5 +95,4 @@ public class CartaoControllerTest {
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON));
     }
-
 }

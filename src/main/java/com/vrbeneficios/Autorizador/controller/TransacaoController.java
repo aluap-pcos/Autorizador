@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/transacao")
 public class TransacaoController {
@@ -19,10 +21,10 @@ public class TransacaoController {
     private TransacaoService transacaoService;
 
     @PostMapping
-    public ResponseEntity<String> cadastrar(@RequestBody TransacaoForm form){
+    public ResponseEntity<String> cadastrar(@RequestBody @Valid TransacaoForm form){
         try {
             transacaoService.novaTransacao(form);
-            return ResponseEntity.ok("OK");
+            return ResponseEntity.status(201).body("OK");
         } catch (CartaoInexistenteException e) {
             return ResponseEntity.unprocessableEntity().body("CARTAO_INEXISTENTE");
         } catch (SenhaInvalidaException e) {
